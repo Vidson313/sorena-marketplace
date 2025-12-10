@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
@@ -10,6 +11,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   LayoutDashboard,
   Package,
@@ -29,74 +38,20 @@ import {
   Trash2,
   Eye,
   Star,
+  Loader2,
 } from "lucide-react";
 import { createClient } from "../../../supabase/client";
 import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
+import { deleteProduct, createProduct, updateProduct } from "@/app/actions";
+import { useToast } from "@/components/ui/use-toast";
 
 interface AdminProductsPageProps {
   user: User;
+  initialProducts: any[];
+  categories: any[];
+  technologies: any[];
 }
-
-// Mock products data
-const products = [
-  {
-    id: "1",
-    title_fa: "داشبورد فروشگاه آنلاین",
-    slug: "ecommerce-dashboard",
-    thumbnail_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=200&q=80",
-    price: 2500000,
-    discount_price: 1750000,
-    category: "داشبورد",
-    sales_count: 450,
-    rating_average: 4.9,
-    is_active: true,
-    is_featured: true,
-    created_at: "۱۴۰۲/۱۲/۰۱",
-  },
-  {
-    id: "2",
-    title_fa: "پلتفرم بلاگ حرفه‌ای",
-    slug: "blog-platform",
-    thumbnail_url: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=200&q=80",
-    price: 1800000,
-    discount_price: null,
-    category: "وب اپلیکیشن",
-    sales_count: 320,
-    rating_average: 4.7,
-    is_active: true,
-    is_featured: true,
-    created_at: "۱۴۰۲/۱۱/۱۵",
-  },
-  {
-    id: "3",
-    title_fa: "قالب اپلیکیشن موبایل",
-    slug: "mobile-app-template",
-    thumbnail_url: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=200&q=80",
-    price: 3200000,
-    discount_price: 2400000,
-    category: "موبایل",
-    sales_count: 280,
-    rating_average: 4.8,
-    is_active: true,
-    is_featured: false,
-    created_at: "۱۴۰۲/۱۱/۰۱",
-  },
-  {
-    id: "4",
-    title_fa: "پنل مدیریت پیشرفته",
-    slug: "admin-panel",
-    thumbnail_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=200&q=80",
-    price: 2100000,
-    discount_price: null,
-    category: "داشبورد",
-    sales_count: 195,
-    rating_average: 4.6,
-    is_active: false,
-    is_featured: false,
-    created_at: "۱۴۰۲/۱۰/۲۰",
-  },
-];
 
 const sidebarItems = [
   { name: "داشبورد", href: "/admin", icon: LayoutDashboard },
@@ -113,9 +68,80 @@ const formatPrice = (price: number) => {
   return new Intl.NumberFormat("fa-IR").format(price);
 };
 
-export default function AdminProductsPage({ user }: AdminProductsPageProps) {
+export default function AdminProductsPage({ 
+  user, 
+  initialProducts,
+  categories,
+  technologies 
+}: AdminProductsPageProps) {
   const supabase = createClient();
   const router = useRouter();
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [products, setProducts] = useState(initialProducts);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const filteredProducts = products.filter((product: any) =>
+    product.title_fa.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleDelete = async (productId: string) => {
+    if (!confirm("آیا از حذف این محصول اطمینان دارید؟")) return;
+
+    setDeletingId(productId);
+    const result = await deleteProduct(productId);
+    setDeletingId(null);
+
+    if (result.error) {
+      toast({
+        title: "خطا",
+        description: result.error,
+        variant: "destructive",
+      });
+    } else {
+      setProducts((prev) => prev.filter((p) => p.id !== productId));
+      toast({
+        title: "حذف شد",
+        description: "محصول با موفقیت حذف شد",
+      });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+
+    startTransition(async () => {
+      let result;
+      if (editingProduct) {
+        result = await updateProduct(editingProduct.id, formData);
+      } else {
+        result = await createProduct(formData);
+      }
+
+      if (result.error) {
+        toast({
+          title: "خطا",
+          description: result.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: editingProduct ? "به‌روزرسانی شد" : "ایجاد شد",
+          description: editingProduct 
+            ? "محصول با موفقیت به‌روزرسانی شد"
+            : "محصول با موفقیت ایجاد شد",
+        });
+        setShowAddModal(false);
+        setEditingProduct(null);
+        router.refresh();
+      }
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background flex">

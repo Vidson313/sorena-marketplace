@@ -16,44 +16,18 @@ import {
 import { redirect } from "next/navigation";
 import { createClient } from "../../../supabase/server";
 import Link from "next/link";
-
-// Mock data for customer dashboard
-const recentPurchases = [
-  {
-    id: "1",
-    order_number: "SRN-20240315-1234",
-    product: {
-      title_fa: "داشبورد فروشگاه آنلاین",
-      thumbnail_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=200&q=80",
-    },
-    price: 1750000,
-    status: "completed",
-    created_at: "2024-03-15",
-    license_key: "SRN-XXXX-XXXX-XXXX",
-  },
-  {
-    id: "2",
-    order_number: "SRN-20240310-5678",
-    product: {
-      title_fa: "پلتفرم بلاگ حرفه‌ای",
-      thumbnail_url: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=200&q=80",
-    },
-    price: 1800000,
-    status: "completed",
-    created_at: "2024-03-10",
-    license_key: "SRN-YYYY-YYYY-YYYY",
-  },
-];
-
-const stats = [
-  { label: "خریدهای من", value: "۵", icon: Package, color: "text-blue-500", bg: "bg-blue-500/10" },
-  { label: "دانلودها", value: "۱۲", icon: Download, color: "text-green-500", bg: "bg-green-500/10" },
-  { label: "علاقه‌مندی‌ها", value: "۸", icon: Heart, color: "text-red-500", bg: "bg-red-500/10" },
-  { label: "تیکت‌های پشتیبانی", value: "۲", icon: MessageSquare, color: "text-purple-500", bg: "bg-purple-500/10" },
-];
+import { getUserOrders, getFavorites } from "@/lib/queries";
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat("fa-IR").format(price);
+};
+
+const statusLabels: Record<string, { label: string; className: string }> = {
+  completed: { label: "تکمیل شده", className: "bg-green-500/10 text-green-500" },
+  pending: { label: "در انتظار پرداخت", className: "bg-yellow-500/10 text-yellow-500" },
+  processing: { label: "در حال پردازش", className: "bg-blue-500/10 text-blue-500" },
+  cancelled: { label: "لغو شده", className: "bg-red-500/10 text-red-500" },
+  refunded: { label: "بازپرداخت شده", className: "bg-gray-500/10 text-gray-500" },
 };
 
 export default async function Dashboard() {
@@ -66,6 +40,44 @@ export default async function Dashboard() {
   if (!user) {
     return redirect("/sign-in");
   }
+
+  // Get real data
+  const [orders, favorites] = await Promise.all([
+    getUserOrders(user.id),
+    getFavorites(user.id),
+  ]);
+
+  // Get tickets count
+  const { count: ticketsCount } = await supabase
+    .from("support_tickets")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id);
+
+  // Calculate downloads count
+  const completedOrders = orders.filter((o: any) => o.status === "completed");
+  const totalDownloads = completedOrders.reduce((acc: number, order: any) => {
+    return acc + (order.items?.length || 0);
+  }, 0);
+
+  const stats = [
+    { label: "خریدهای من", value: orders.length.toString(), icon: Package, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { label: "دانلودها", value: totalDownloads.toString(), icon: Download, color: "text-green-500", bg: "bg-green-500/10" },
+    { label: "علاقه‌مندی‌ها", value: favorites.length.toString(), icon: Heart, color: "text-red-500", bg: "bg-red-500/10" },
+    { label: "تیکت‌های پشتیبانی", value: (ticketsCount || 0).toString(), icon: MessageSquare, color: "text-purple-500", bg: "bg-purple-500/10" },
+  ];
+
+  // Get recent purchases with license keys
+  const recentPurchases = completedOrders.slice(0, 5).flatMap((order: any) => 
+    order.items?.map((item: any) => ({
+      id: item.id,
+      order_number: order.order_number,
+      product: item.product,
+      price: Number(item.discount_price || item.price),
+      status: order.status,
+      created_at: order.created_at,
+      license_key: item.license_key,
+    })) || []
+  );
 
   return (
     <>

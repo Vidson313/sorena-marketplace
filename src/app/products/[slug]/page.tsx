@@ -24,177 +24,80 @@ import {
   ThumbsUp,
 } from "lucide-react";
 import Link from "next/link";
-
-// Mock product data
-const product = {
-  id: "1",
-  title: "E-commerce Dashboard",
-  title_fa: "داشبورد فروشگاه آنلاین",
-  slug: "ecommerce-dashboard",
-  description_fa: `
-    این داشبورد فروشگاهی یک راه‌حل کامل برای مدیریت فروشگاه آنلاین شماست. 
-    با استفاده از React و Next.js ساخته شده و شامل تمام امکانات مورد نیاز برای مدیریت محصولات، سفارشات، مشتریان و گزارش‌های فروش است.
-    
-    این پروژه شامل:
-    - داشبورد تحلیلی با نمودارهای پیشرفته
-    - مدیریت محصولات با قابلیت آپلود تصاویر
-    - سیستم مدیریت سفارشات
-    - مدیریت مشتریان و کاربران
-    - گزارش‌های فروش و درآمد
-    - سیستم احراز هویت کامل
-    - طراحی ریسپانسیو برای موبایل
-    - حالت تاریک و روشن
-  `,
-  short_description_fa: "داشبورد مدیریت فروشگاه با React و Next.js",
-  price: 2500000,
-  discount_price: 1750000,
-  difficulty_level: "intermediate" as const,
-  thumbnail_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&q=80",
-  preview_images: [
-    "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&q=80",
-    "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&q=80",
-    "https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&q=80",
-    "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&q=80",
-  ],
-  demo_url: "https://demo.example.com",
-  rating_average: 4.9,
-  rating_count: 128,
-  sales_count: 450,
-  view_count: 2340,
-  is_featured: true,
-  is_active: true,
-  version: "2.0.0",
-  support_duration_months: 6,
-  includes_source_code: true,
-  includes_documentation: true,
-  includes_database: true,
-  includes_video_tutorial: true,
-  created_at: "2024-01-15",
-  updated_at: "2024-03-20",
-  technologies: [
-    { id: "1", name: "React", slug: "react", created_at: "" },
-    { id: "2", name: "Next.js", slug: "nextjs", created_at: "" },
-    { id: "3", name: "Tailwind CSS", slug: "tailwindcss", created_at: "" },
-    { id: "4", name: "TypeScript", slug: "typescript", created_at: "" },
-    { id: "5", name: "Supabase", slug: "supabase", created_at: "" },
-  ],
-  category: {
-    id: "1",
-    name: "Dashboard & Admin",
-    name_fa: "داشبورد و پنل مدیریت",
-    slug: "dashboard-admin",
-    created_at: "",
-    updated_at: "",
-  },
-};
-
-const reviews = [
-  {
-    id: "1",
-    user: { name: "علی محمدی", avatar: null },
-    rating: 5,
-    title: "عالی بود!",
-    content: "کیفیت کد بسیار بالاست و مستندات کامل است. پشتیبانی هم سریع پاسخ داد.",
-    created_at: "2024-03-15",
-    helpful_count: 12,
-  },
-  {
-    id: "2",
-    user: { name: "سارا احمدی", avatar: null },
-    rating: 5,
-    title: "توصیه می‌کنم",
-    content: "راه‌اندازی خیلی آسان بود و همه چیز طبق مستندات کار کرد.",
-    created_at: "2024-03-10",
-    helpful_count: 8,
-  },
-  {
-    id: "3",
-    user: { name: "محمد رضایی", avatar: null },
-    rating: 4,
-    title: "خوب ولی نیاز به بهبود دارد",
-    content: "در کل راضی هستم ولی بعضی قسمت‌ها می‌توانست بهتر باشد.",
-    created_at: "2024-03-05",
-    helpful_count: 3,
-  },
-];
-
-const relatedProducts = [
-  {
-    id: "2",
-    title: "Blog Platform",
-    title_fa: "پلتفرم بلاگ حرفه‌ای",
-    slug: "blog-platform",
-    short_description_fa: "سیستم مدیریت محتوا با Laravel و Vue.js",
-    price: 1800000,
-    discount_price: undefined,
-    difficulty_level: "beginner" as const,
-    thumbnail_url: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80",
-    rating_average: 4.7,
-    rating_count: 89,
-    sales_count: 320,
-    is_featured: true,
-    is_active: true,
-    version: "1.5.0",
-    view_count: 0,
-    support_duration_months: 6,
-    includes_source_code: true,
-    includes_documentation: true,
-    includes_database: true,
-    includes_video_tutorial: false,
-    created_at: "",
-    updated_at: "",
-    technologies: [
-      { id: "4", name: "Laravel", slug: "laravel", created_at: "" },
-      { id: "5", name: "Vue.js", slug: "vuejs", created_at: "" },
-    ],
-  },
-  {
-    id: "4",
-    title: "Admin Panel",
-    title_fa: "پنل مدیریت پیشرفته",
-    slug: "admin-panel",
-    short_description_fa: "پنل ادمین با امکانات کامل",
-    price: 2100000,
-    discount_price: undefined,
-    difficulty_level: "intermediate" as const,
-    thumbnail_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
-    rating_average: 4.6,
-    rating_count: 72,
-    sales_count: 195,
-    is_featured: false,
-    is_active: true,
-    version: "1.8.0",
-    view_count: 0,
-    support_duration_months: 6,
-    includes_source_code: true,
-    includes_documentation: true,
-    includes_database: true,
-    includes_video_tutorial: false,
-    created_at: "",
-    updated_at: "",
-    technologies: [
-      { id: "1", name: "React", slug: "react", created_at: "" },
-      { id: "8", name: "Node.js", slug: "nodejs", created_at: "" },
-    ],
-  },
-];
+import { notFound } from "next/navigation";
+import { getProductBySlug, getProducts, getProductReviews } from "@/lib/queries";
+import { createClient } from "../../../../supabase/server";
+import ProductActions from "@/components/product-actions";
+import ReviewForm from "@/components/review-form";
+import QuestionForm from "@/components/question-form";
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat("fa-IR").format(price);
 };
 
-export default function ProductDetailPage({ params }: { params: { slug: string } }) {
-  const hasDiscount = product.discount_price && product.discount_price < product.price;
+export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  const product = await getProductBySlug(params.slug);
+  
+  if (!product) {
+    notFound();
+  }
+
+  const reviews = await getProductReviews(product.id);
+  
+  // Get related products (same category)
+  const allProducts = await getProducts({ category: product.category?.slug });
+  const relatedProducts = allProducts
+    .filter((p: any) => p.id !== product.id)
+    .slice(0, 3);
+
+  // Get Q&A
+  const { data: questions } = await supabase
+    .from("product_questions")
+    .select("*, user:users(name)")
+    .eq("product_id", product.id)
+    .eq("is_public", true)
+    .order("created_at", { ascending: false });
+
+  // Check if user has purchased this product
+  let hasPurchased = false;
+  if (user) {
+    const { data: orderItem } = await supabase
+      .from("order_items")
+      .select("id, order:orders!inner(user_id, status)")
+      .eq("product_id", product.id)
+      .eq("order.user_id", user.id)
+      .eq("order.status", "completed")
+      .single();
+    hasPurchased = !!orderItem;
+  }
+
+  // Check if product is in user's favorites
+  let isFavorite = false;
+  if (user) {
+    const { data: favorite } = await supabase
+      .from("favorites")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .eq("product_id", product.id)
+      .single();
+    isFavorite = !!favorite;
+  }
+
+  const hasDiscount = product.discount_price && Number(product.discount_price) < Number(product.price);
   const discountPercent = hasDiscount
-    ? Math.round(((product.price - product.discount_price!) / product.price) * 100)
+    ? Math.round(((Number(product.price) - Number(product.discount_price)) / Number(product.price)) * 100)
     : 0;
+
+  const previewImages = product.preview_images || [product.thumbnail_url];
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
       <main className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
           <Link href="/" className="hover:text-primary">خانه</Link>
           <ChevronLeft className="w-4 h-4" />

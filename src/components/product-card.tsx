@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Star, Eye, ShoppingCart, Heart, Code2 } from "lucide-react";
+import { Star, Eye, ShoppingCart, Heart, Code2, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import type { Product, Technology } from "@/types/database";
+import { useState, useTransition } from "react";
+import { addToCart, toggleFavorite } from "@/app/actions";
+import { useToast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
 
 interface ProductCardProps {
   product: Product;
@@ -18,13 +22,72 @@ const difficultyLabels = {
 };
 
 export function ProductCard({ product, variant = "default" }: ProductCardProps) {
-  const hasDiscount = product.discount_price && product.discount_price < product.price;
+  const router = useRouter();
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  const hasDiscount = product.discount_price && Number(product.discount_price) < Number(product.price);
   const discountPercent = hasDiscount
-    ? Math.round(((product.price - product.discount_price!) / product.price) * 100)
+    ? Math.round(((Number(product.price) - Number(product.discount_price!)) / Number(product.price)) * 100)
     : 0;
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("fa-IR").format(price);
+  };
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setIsAddingToCart(true);
+    const result = await addToCart(product.id);
+    setIsAddingToCart(false);
+
+    if (result.error) {
+      if (result.error.includes("وارد شوید")) {
+        router.push("/sign-in");
+      }
+      toast({
+        title: "خطا",
+        description: result.error,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "اضافه شد",
+        description: result.message,
+      });
+      router.refresh();
+    }
+  };
+
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    startTransition(async () => {
+      const result = await toggleFavorite(product.id);
+      if (result.error) {
+        if (result.error.includes("وارد شوید")) {
+          router.push("/sign-in");
+        }
+        toast({
+          title: "خطا",
+          description: result.error,
+          variant: "destructive",
+        });
+      } else {
+        setIsFavorite(result.isFavorite!);
+        toast({
+          title: result.isFavorite ? "اضافه شد" : "حذف شد",
+          description: result.isFavorite
+            ? "به علاقه‌مندی‌ها اضافه شد"
+            : "از علاقه‌مندی‌ها حذف شد",
+        });
+      }
+    });
   };
 
   if (variant === "horizontal") {
@@ -119,8 +182,18 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
         </div>
 
         {/* Favorite Button */}
-        <button className="absolute top-3 left-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/40 transition-colors">
-          <Heart className="w-4 h-4 text-white" />
+        <button 
+          onClick={handleToggleFavorite}
+          disabled={isPending}
+          className={`absolute top-3 left-3 w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center hover:bg-white/40 transition-colors ${
+            isFavorite ? "bg-red-500/80" : "bg-white/20"
+          }`}
+        >
+          {isPending ? (
+            <Loader2 className="w-4 h-4 text-white animate-spin" />
+          ) : (
+            <Heart className={`w-4 h-4 text-white ${isFavorite ? "fill-white" : ""}`} />
+          )}
         </button>
       </div>
 
@@ -173,8 +246,17 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
               {formatPrice(hasDiscount ? product.discount_price! : product.price)} تومان
             </span>
           </div>
-          <Button size="sm" className="rounded-full px-4 bg-primary hover:bg-primary/90 text-white">
-            <ShoppingCart className="w-4 h-4 ml-1" />
+          <Button 
+            size="sm" 
+            className="rounded-full px-4 bg-primary hover:bg-primary/90 text-white"
+            onClick={handleAddToCart}
+            disabled={isAddingToCart}
+          >
+            {isAddingToCart ? (
+              <Loader2 className="w-4 h-4 ml-1 animate-spin" />
+            ) : (
+              <ShoppingCart className="w-4 h-4 ml-1" />
+            )}
             خرید
           </Button>
         </div>

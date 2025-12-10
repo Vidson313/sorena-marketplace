@@ -6,67 +6,7 @@ import { Heart, ArrowLeft, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "../../../supabase/server";
-
-// Mock favorites data
-const favoriteProducts = [
-  {
-    id: "1",
-    title: "E-commerce Dashboard",
-    title_fa: "داشبورد فروشگاه آنلاین",
-    slug: "ecommerce-dashboard",
-    short_description_fa: "داشبورد مدیریت فروشگاه با React و Next.js",
-    price: 2500000,
-    discount_price: 1750000,
-    difficulty_level: "intermediate" as const,
-    thumbnail_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
-    rating_average: 4.9,
-    rating_count: 128,
-    sales_count: 450,
-    is_featured: true,
-    is_active: true,
-    version: "2.0.0",
-    view_count: 0,
-    support_duration_months: 6,
-    includes_source_code: true,
-    includes_documentation: true,
-    includes_database: true,
-    includes_video_tutorial: true,
-    created_at: "",
-    updated_at: "",
-    technologies: [
-      { id: "1", name: "React", slug: "react", created_at: "" },
-      { id: "2", name: "Next.js", slug: "nextjs", created_at: "" },
-    ],
-  },
-  {
-    id: "3",
-    title: "Mobile App Template",
-    title_fa: "قالب اپلیکیشن موبایل",
-    slug: "mobile-app-template",
-    short_description_fa: "اپلیکیشن موبایل با React Native",
-    price: 3200000,
-    discount_price: 2400000,
-    difficulty_level: "advanced" as const,
-    thumbnail_url: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&q=80",
-    rating_average: 4.8,
-    rating_count: 156,
-    sales_count: 280,
-    is_featured: true,
-    is_active: true,
-    version: "3.0.0",
-    view_count: 0,
-    support_duration_months: 6,
-    includes_source_code: true,
-    includes_documentation: true,
-    includes_database: false,
-    includes_video_tutorial: true,
-    created_at: "",
-    updated_at: "",
-    technologies: [
-      { id: "6", name: "React Native", slug: "react-native", created_at: "" },
-    ],
-  },
-];
+import { getFavorites } from "@/lib/queries";
 
 export default async function FavoritesPage() {
   const supabase = await createClient();
@@ -76,12 +16,14 @@ export default async function FavoritesPage() {
     return redirect("/sign-in");
   }
 
+  const favorites = await getFavorites(user.id);
+  const favoriteProducts = favorites.map((fav: any) => fav.product);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
       <main className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
           <Link href="/" className="hover:text-primary">
             خانه
@@ -101,7 +43,7 @@ export default async function FavoritesPage() {
 
         {favoriteProducts.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {favoriteProducts.map((product) => (
+            {favoriteProducts.map((product: any) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

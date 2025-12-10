@@ -37,93 +37,15 @@ import { User } from "@supabase/supabase-js";
 
 interface AdminDashboardProps {
   user: User;
+  stats: {
+    totalRevenue: number;
+    totalOrders: number;
+    totalUsers: number;
+    totalViews: number;
+  };
+  recentOrders: any[];
+  topProducts: any[];
 }
-
-// Mock data
-const stats = [
-  {
-    label: "درآمد کل",
-    value: "۱۲۵,۰۰۰,۰۰۰",
-    unit: "تومان",
-    change: "+۱۲٪",
-    trend: "up",
-    icon: DollarSign,
-    color: "text-green-500",
-    bg: "bg-green-500/10",
-  },
-  {
-    label: "سفارشات",
-    value: "۱,۲۳۴",
-    unit: "",
-    change: "+۸٪",
-    trend: "up",
-    icon: ShoppingCart,
-    color: "text-blue-500",
-    bg: "bg-blue-500/10",
-  },
-  {
-    label: "کاربران",
-    value: "۲,۵۶۷",
-    unit: "",
-    change: "+۱۵٪",
-    trend: "up",
-    icon: Users,
-    color: "text-purple-500",
-    bg: "bg-purple-500/10",
-  },
-  {
-    label: "بازدید",
-    value: "۴۵,۶۷۸",
-    unit: "",
-    change: "-۳٪",
-    trend: "down",
-    icon: Eye,
-    color: "text-orange-500",
-    bg: "bg-orange-500/10",
-  },
-];
-
-const recentOrders = [
-  {
-    id: "SRN-20240315-1234",
-    customer: "علی محمدی",
-    product: "داشبورد فروشگاه آنلاین",
-    amount: 1750000,
-    status: "completed",
-    date: "۱۴۰۲/۱۲/۲۵",
-  },
-  {
-    id: "SRN-20240315-1235",
-    customer: "سارا احمدی",
-    product: "پلتفرم بلاگ حرفه‌ای",
-    amount: 1800000,
-    status: "pending",
-    date: "۱۴۰۲/۱۲/۲۵",
-  },
-  {
-    id: "SRN-20240315-1236",
-    customer: "محمد رضایی",
-    product: "قالب اپلیکیشن موبایل",
-    amount: 2400000,
-    status: "completed",
-    date: "۱۴۰۲/۱۲/۲۴",
-  },
-  {
-    id: "SRN-20240315-1237",
-    customer: "زهرا کریمی",
-    product: "پنل مدیریت پیشرفته",
-    amount: 2100000,
-    status: "processing",
-    date: "۱۴۰۲/۱۲/۲۴",
-  },
-];
-
-const topProducts = [
-  { name: "داشبورد فروشگاه آنلاین", sales: 450, revenue: 787500000 },
-  { name: "قالب وردپرس فروشگاهی", sales: 890, revenue: 1068000000 },
-  { name: "پلتفرم بلاگ حرفه‌ای", sales: 320, revenue: 576000000 },
-  { name: "کیت استارتر SaaS", sales: 145, revenue: 652500000 },
-];
 
 const sidebarItems = [
   { name: "داشبورد", href: "/admin", icon: LayoutDashboard },
@@ -147,9 +69,44 @@ const statusLabels: Record<string, { label: string; className: string }> = {
   cancelled: { label: "لغو شده", className: "bg-red-500/10 text-red-500" },
 };
 
-export default function AdminDashboard({ user }: AdminDashboardProps) {
+export default function AdminDashboard({ user, stats, recentOrders, topProducts }: AdminDashboardProps) {
   const supabase = createClient();
   const router = useRouter();
+
+  const statsData = [
+    {
+      label: "درآمد کل",
+      value: formatPrice(stats.totalRevenue),
+      unit: "تومان",
+      icon: DollarSign,
+      color: "text-green-500",
+      bg: "bg-green-500/10",
+    },
+    {
+      label: "سفارشات",
+      value: stats.totalOrders.toString(),
+      unit: "",
+      icon: ShoppingCart,
+      color: "text-blue-500",
+      bg: "bg-blue-500/10",
+    },
+    {
+      label: "کاربران",
+      value: stats.totalUsers.toString(),
+      unit: "",
+      icon: Users,
+      color: "text-purple-500",
+      bg: "bg-purple-500/10",
+    },
+    {
+      label: "بازدید",
+      value: stats.totalViews.toString(),
+      unit: "",
+      icon: Eye,
+      color: "text-orange-500",
+      bg: "bg-orange-500/10",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -224,9 +181,6 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
               <ThemeSwitcher />
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -left-1 h-4 w-4 rounded-full bg-destructive text-[10px] font-bold text-white flex items-center justify-center">
-                  3
-                </span>
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -269,7 +223,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
               <h1 className="text-2xl font-bold mb-1">داشبورد</h1>
               <p className="text-muted-foreground">خلاصه وضعیت فروشگاه</p>
             </div>
-            <Link href="/admin/products/new">
+            <Link href="/admin/products">
               <Button className="rounded-full bg-primary hover:bg-primary/90 text-white gap-2">
                 <Plus className="w-4 h-4" />
                 افزودن محصول
@@ -279,24 +233,12 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {stats.map((stat, index) => (
+            {statsData.map((stat, index) => (
               <div key={index} className="glass-surface rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-3">
                   <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}>
                     <stat.icon className={`w-5 h-5 ${stat.color}`} />
                   </div>
-                  <span
-                    className={`text-xs font-medium flex items-center gap-1 ${
-                      stat.trend === "up" ? "text-green-500" : "text-red-500"
-                    }`}
-                  >
-                    {stat.trend === "up" ? (
-                      <TrendingUp className="w-3 h-3" />
-                    ) : (
-                      <TrendingDown className="w-3 h-3" />
-                    )}
-                    {stat.change}
-                  </span>
                 </div>
                 <p className="text-2xl font-bold">
                   {stat.value}
@@ -326,31 +268,39 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
                     <tr className="text-right text-sm text-muted-foreground border-b border-border">
                       <th className="pb-3 font-medium">شماره سفارش</th>
                       <th className="pb-3 font-medium">مشتری</th>
-                      <th className="pb-3 font-medium">محصول</th>
                       <th className="pb-3 font-medium">مبلغ</th>
                       <th className="pb-3 font-medium">وضعیت</th>
                       <th className="pb-3 font-medium">تاریخ</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {recentOrders.map((order) => (
-                      <tr key={order.id} className="border-b border-border/50 last:border-0">
-                        <td className="py-4 text-sm font-mono">{order.id}</td>
-                        <td className="py-4 text-sm">{order.customer}</td>
-                        <td className="py-4 text-sm truncate max-w-[150px]">{order.product}</td>
-                        <td className="py-4 text-sm font-medium">{formatPrice(order.amount)}</td>
-                        <td className="py-4">
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${
-                              statusLabels[order.status].className
-                            }`}
-                          >
-                            {statusLabels[order.status].label}
-                          </span>
+                    {recentOrders.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                          هنوز سفارشی ثبت نشده است
                         </td>
-                        <td className="py-4 text-sm text-muted-foreground">{order.date}</td>
                       </tr>
-                    ))}
+                    ) : (
+                      recentOrders.map((order: any) => (
+                        <tr key={order.id} className="border-b border-border/50 last:border-0">
+                          <td className="py-4 text-sm font-mono">{order.order_number}</td>
+                          <td className="py-4 text-sm">{order.user?.name || order.user?.email || "بدون نام"}</td>
+                          <td className="py-4 text-sm font-medium">{formatPrice(Number(order.total))}</td>
+                          <td className="py-4">
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${
+                                statusLabels[order.status]?.className || statusLabels.pending.className
+                              }`}
+                            >
+                              {statusLabels[order.status]?.label || order.status}
+                            </span>
+                          </td>
+                          <td className="py-4 text-sm text-muted-foreground">
+                            {new Date(order.created_at).toLocaleDateString("fa-IR")}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -369,22 +319,26 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
               </div>
 
               <div className="space-y-4">
-                {topProducts.map((product, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <span className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
-                      {index + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{product.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatPrice(product.sales)} فروش
+                {topProducts.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">محصولی یافت نشد</p>
+                ) : (
+                  topProducts.map((product: any, index: number) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <span className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+                        {index + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{product.title_fa}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {product.sales_count} فروش
+                        </p>
+                      </div>
+                      <p className="text-sm font-medium text-primary">
+                        {formatPrice(Number(product.price) * product.sales_count)}
                       </p>
                     </div>
-                    <p className="text-sm font-medium text-primary">
-                      {formatPrice(product.revenue)}
-                    </p>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
