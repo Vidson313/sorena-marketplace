@@ -1,0 +1,277 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Mode - Sorena Design System */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 270 67% 72%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 187 92% 53%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 350 89% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 239 84% 67%;
+    --radius: 0.75rem;
+    
+    /* Sorena Custom Colors */
+    --sorena-primary: 239 84% 67%;
+    --sorena-secondary: 270 67% 72%;
+    --sorena-accent: 187 92% 53%;
+    --sorena-coral: 350 89% 60%;
+    --sorena-success: 160 84% 39%;
+    --sorena-warning: 25 95% 53%;
+    --sorena-info: 217 91% 60%;
+    
+    /* Glass Surface */
+    --glass-bg: 0 0% 100% / 0.8;
+    --glass-border: 214 32% 91% / 0.6;
+  }
+
+  .dark {
+    /* Dark Mode - Sorena Design System (Default) */
+    --background: 222 47% 2%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 5%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 5%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 270 67% 72%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 187 92% 53%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 350 89% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 187 92% 53%;
+    
+    /* Glass Surface Dark */
+    --glass-bg: 222 47% 5% / 0.7;
+    --glass-border: 215 28% 37% / 0.4;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    font-family: 'Vazirmatn', system-ui, sans-serif;
+    direction: rtl;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Custom scrollbar for dark mode */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/30;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+}
+
+@layer components {
+  /* Glassmorphism Surface */
+  .glass-surface {
+    @apply bg-card/70 backdrop-blur-xl border border-border/40;
+  }
+  
+  .glass-surface-strong {
+    @apply bg-card/85 backdrop-blur-2xl border border-border/60;
+  }
+  
+  /* Neobrutalism Accent */
+  .neo-brutal {
+    @apply border-2 border-foreground shadow-[4px_4px_0px_0px] shadow-foreground;
+  }
+  
+  .neo-brutal-primary {
+    @apply border-2 border-primary shadow-[4px_4px_0px_0px] shadow-primary;
+  }
+  
+  /* Gradient Text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent;
+  }
+  
+  /* Glow Effects */
+  .glow-primary {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+  
+  .glow-accent {
+    box-shadow: 0 0 20px hsl(var(--accent) / 0.3);
+  }
+  
+  /* Card Hover Effect - Glassmorphic with tilt and glow */
+  .card-hover {
+    @apply transition-all border border-transparent;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+    transform-style: preserve-3d;
+    perspective: 1000px;
+  }
+  
+  .card-hover:hover {
+    @apply scale-[1.02];
+    transform: scale(1.02) rotate3d(0.5, -0.5, 0, 3deg);
+    box-shadow: 
+      0 18px 40px hsl(var(--primary) / 0.2),
+      0 0 0 1px hsl(var(--accent) / 0.4),
+      0 0 20px hsl(var(--accent) / 0.15);
+    border-color: hsl(var(--accent) / 0.5);
+  }
+  
+  /* Enhanced card hover for product cards */
+  .card-hover-enhanced {
+    @apply transition-all border border-transparent;
+    transition-duration: 220ms;
+    transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+    transform-style: preserve-3d;
+    perspective: 1000px;
+  }
+  
+  .card-hover-enhanced:hover {
+    transform: scale(1.02) rotate3d(0.3, -0.5, 0, 2.5deg);
+    box-shadow: 
+      0 20px 50px hsl(var(--primary) / 0.25),
+      0 0 0 1.5px hsl(var(--accent) / 0.5),
+      0 0 30px hsl(var(--accent) / 0.2),
+      inset 0 0 20px hsl(var(--accent) / 0.05);
+    border-color: hsl(var(--accent) / 0.6);
+  }
+  
+  /* Shimmer Loading */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--muted-foreground) / 0.1) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+  
+  /* Pill Button */
+  .btn-pill {
+    @apply rounded-full px-6 py-3 font-medium transition-all duration-200;
+  }
+  
+  /* Badge Styles */
+  .badge-tech {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20;
+  }
+  
+  .badge-difficulty-beginner {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-500 border border-green-500/20;
+  }
+  
+  .badge-difficulty-intermediate {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-500 border border-yellow-500/20;
+  }
+  
+  .badge-difficulty-advanced {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-500 border border-red-500/20;
+  }
+  
+  /* Discount Badge */
+  .badge-discount {
+    @apply inline-flex items-center px-2 py-1 rounded-md text-xs font-bold bg-destructive text-destructive-foreground;
+  }
+}
+
+@layer utilities {
+  /* Animation Utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+  }
+  
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes pulseGlow {
+    0%, 100% {
+      box-shadow: 0 0 5px hsl(var(--primary) / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 20px hsl(var(--primary) / 0.6);
+    }
+  }
+  
+  /* Stagger Animation Delays */
+  .stagger-1 { animation-delay: 0.1s; }
+  .stagger-2 { animation-delay: 0.2s; }
+  .stagger-3 { animation-delay: 0.3s; }
+  .stagger-4 { animation-delay: 0.4s; }
+  .stagger-5 { animation-delay: 0.5s; }
+  .stagger-6 { animation-delay: 0.6s; }
+}
