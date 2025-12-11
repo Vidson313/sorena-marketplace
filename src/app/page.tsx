@@ -18,9 +18,10 @@ import {
 } from 'lucide-react';
 import Link from "next/link";
 import { createClient } from "../../supabase/server";
+import { getFeaturedProducts, getCategories } from "@/lib/queries";
 
-// Mock featured products for display
-const mockProducts = [
+// Fallback mock products for when database is empty
+const fallbackProducts = [
   {
     id: "1",
     title: "E-commerce Dashboard",
@@ -140,7 +141,7 @@ const mockProducts = [
   },
 ];
 
-const categories = [
+const defaultCategories = [
   { name: "وب اپلیکیشن", icon: Code2, count: 45, href: "/products?category=web-applications" },
   { name: "موبایل", icon: Zap, count: 28, href: "/products?category=mobile-apps" },
   { name: "وردپرس", icon: Award, count: 62, href: "/products?category=wordpress" },
@@ -150,6 +151,21 @@ const categories = [
 export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  
+  // Fetch real products from database
+  const featuredProducts = await getFeaturedProducts(4);
+  const products = featuredProducts.length > 0 ? featuredProducts : fallbackProducts;
+  
+  // Fetch categories from database
+  const dbCategories = await getCategories();
+  const categories = dbCategories.length > 0 
+    ? dbCategories.map((cat, index) => ({
+        name: cat.name_fa,
+        icon: [Code2, Zap, Award, TrendingUp][index % 4],
+        count: 0, // Will be updated with actual count
+        href: `/products?category=${cat.slug}`
+      }))
+    : defaultCategories;
 
   return (
     <div className="min-h-screen bg-background">
@@ -197,7 +213,7 @@ export default async function Home() {
           </div>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {mockProducts.map((product) => (
+            {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

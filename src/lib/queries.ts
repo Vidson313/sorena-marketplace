@@ -1,8 +1,10 @@
-import { createClient } from "../../supabase/server";
+import { createClient } from "@/../../supabase/server";
 import type { Product, Category, Technology, ProductFilters } from "@/types/database";
 
-// Get all products with filters
-export async function getProducts(filters?: ProductFilters) {
+const ITEMS_PER_PAGE = 12;
+
+// Get all products with filters and pagination
+export async function getProducts(filters?: ProductFilters, page: number = 1) {
   const supabase = await createClient();
   
   let query = supabase
@@ -13,7 +15,7 @@ export async function getProducts(filters?: ProductFilters) {
       technologies:product_technologies(
         technology:technologies(*)
       )
-    `)
+    `, { count: "exact" })
     .eq("is_active", true);
 
   if (filters?.category) {
@@ -57,18 +59,29 @@ export async function getProducts(filters?: ProductFilters) {
       query = query.order("created_at", { ascending: false });
   }
 
-  const { data, error } = await query;
+  // Pagination
+  const from = (page - 1) * ITEMS_PER_PAGE;
+  const to = from + ITEMS_PER_PAGE - 1;
+  query = query.range(from, to);
+
+  const { data, error, count } = await query;
 
   if (error) {
     console.error("Error fetching products:", error);
-    return [];
+    return { products: [], totalCount: 0, totalPages: 0 };
   }
 
   // Transform the data to flatten technologies
-  return data?.map((product: any) => ({
+  const products = data?.map((product: any) => ({
     ...product,
     technologies: product.technologies?.map((pt: any) => pt.technology) || [],
   })) || [];
+
+  return {
+    products,
+    totalCount: count || 0,
+    totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE),
+  };
 }
 
 // Get featured products
@@ -244,7 +257,10 @@ export async function getUserOrders(userId: string) {
       *,
       items:order_items(
         *,
-        product:products(*)
+        product:products(
+          *,
+          files:product_files(*)
+        )
       )
     `)
     .eq("user_id", userId)
@@ -273,4 +289,21 @@ export async function isUserAdmin(userId: string) {
   }
 
   return data?.role === "admin" || data?.role === "super_admin";
+}
+
+// Get cart items count for a user
+export async function getCartCount(userId: string) {
+  const supabase = await createClient();
+  
+  const { count, error } = await supabase
+    .from("cart_items")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("Error fetching cart count:", error);
+    return 0;
+  }
+
+  return count || 0;
 }

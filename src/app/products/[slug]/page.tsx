@@ -35,6 +35,15 @@ const formatPrice = (price: number) => {
   return new Intl.NumberFormat("fa-IR").format(price);
 };
 
+const formatDate = (dateString: string) => {
+  if (!dateString) return "-";
+  return new Date(dateString).toLocaleDateString("fa-IR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
 export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -48,8 +57,8 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   const reviews = await getProductReviews(product.id);
   
   // Get related products (same category)
-  const allProducts = await getProducts({ category: product.category?.slug });
-  const relatedProducts = allProducts
+  const relatedResult = await getProducts({ category: product.category?.slug });
+  const relatedProducts = relatedResult.products
     .filter((p: any) => p.id !== product.id)
     .slice(0, 3);
 
@@ -174,7 +183,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                       </li>
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">آخرین بروزرسانی</span>
-                        <span>{product.updated_at}</span>
+                        <span>{formatDate(product.updated_at)}</span>
                       </li>
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">سطح دشواری</span>
@@ -239,7 +248,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                                 ))}
                               </div>
                               <span className="text-xs text-muted-foreground">
-                                {review.created_at}
+                                {formatDate(review.created_at)}
                               </span>
                             </div>
                           </div>
@@ -276,14 +285,6 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             <div className="glass-surface rounded-2xl p-6 sticky top-24">
               <div className="flex items-center justify-between mb-4">
                 <h1 className="text-xl font-bold">{product.title_fa}</h1>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="icon">
-                    <Heart className="w-5 h-5" />
-                  </Button>
-                  <Button variant="ghost" size="icon">
-                    <Share2 className="w-5 h-5" />
-                  </Button>
-                </div>
               </div>
 
               {/* Rating & Stats */}
@@ -316,16 +317,20 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
 
               {/* CTA Buttons */}
               <div className="space-y-3 mb-6">
-                <Button className="w-full h-12 rounded-full bg-primary hover:bg-primary/90 text-white gap-2">
-                  <ShoppingCart className="w-5 h-5" />
-                  افزودن به سبد خرید
-                </Button>
+                <ProductActions 
+                  productId={product.id}
+                  isFavorite={isFavorite}
+                  isLoggedIn={!!user}
+                  hasPurchased={hasPurchased}
+                />
                 {product.demo_url && (
-                  <Button variant="outline" className="w-full h-12 rounded-full gap-2">
-                    <Eye className="w-5 h-5" />
-                    مشاهده دمو
-                    <ExternalLink className="w-4 h-4" />
-                  </Button>
+                  <a href={product.demo_url} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" className="w-full h-12 rounded-full gap-2">
+                      <Eye className="w-5 h-5" />
+                      مشاهده دمو
+                      <ExternalLink className="w-4 h-4" />
+                    </Button>
+                  </a>
                 )}
               </div>
 

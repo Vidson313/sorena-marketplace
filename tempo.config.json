@@ -1,4 +1,6 @@
 {
+    "framework": "nextjs",
+    "devCommand": "npm run dev",
     "typography": [
       {
         "name": "Header 1",

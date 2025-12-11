@@ -8,7 +8,9 @@ import {
   Grid3X3, 
   List,
   ChevronDown,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import Link from "next/link";
 import { getProducts, getCategories, getTechnologies } from "@/lib/queries";
@@ -28,6 +30,8 @@ interface ProductsPageProps {
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const currentPage = parseInt(searchParams.page || "1");
+  
   const filters = {
     category: searchParams.category,
     technology: searchParams.technology,
@@ -38,11 +42,13 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     sortBy: searchParams.sortBy as any,
   };
 
-  const [products, categories, technologies] = await Promise.all([
-    getProducts(filters),
+  const [productsResult, categories, technologies] = await Promise.all([
+    getProducts(filters, currentPage),
     getCategories(),
     getTechnologies(),
   ]);
+
+  const { products, totalCount, totalPages } = productsResult;
 
   const activeFilters: { key: string; label: string }[] = [];
   if (searchParams.category) {
@@ -87,7 +93,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">پروژه‌های آماده</h1>
           <p className="text-muted-foreground">
-            {products.length} پروژه آماده با کیفیت بالا و پشتیبانی کامل
+            {totalCount} پروژه آماده با کیفیت بالا و پشتیبانی کامل
           </p>
         </div>
 
@@ -140,11 +146,71 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             )}
 
             {products.length > 0 ? (
-              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {products.map((product: any) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
+              <>
+                <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {products.map((product: any) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-8">
+                    <Link
+                      href={{
+                        pathname: "/products",
+                        query: { ...searchParams, page: Math.max(1, currentPage - 1) },
+                      }}
+                      className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                    >
+                      <Button variant="outline" size="icon" disabled={currentPage <= 1}>
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <Link
+                          key={pageNum}
+                          href={{
+                            pathname: "/products",
+                            query: { ...searchParams, page: pageNum },
+                          }}
+                        >
+                          <Button
+                            variant={currentPage === pageNum ? "default" : "outline"}
+                            size="icon"
+                          >
+                            {pageNum}
+                          </Button>
+                        </Link>
+                      );
+                    })}
+
+                    <Link
+                      href={{
+                        pathname: "/products",
+                        query: { ...searchParams, page: Math.min(totalPages, currentPage + 1) },
+                      }}
+                      className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                    >
+                      <Button variant="outline" size="icon" disabled={currentPage >= totalPages}>
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-16">
                 <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-muted/50 flex items-center justify-center">
@@ -529,7 +595,7 @@ export default function ProductsPage() {
 
             {/* Products Grid */}
             <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {mockProducts.map((product) => (
+              {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>

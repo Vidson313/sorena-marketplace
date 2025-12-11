@@ -120,7 +120,7 @@ export default async function Dashboard() {
               <div className="glass-surface rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-semibold">خریدهای اخیر</h2>
-                  <Link href="/dashboard/purchases">
+                  <Link href="/dashboard/orders">
                     <Button variant="ghost" size="sm" className="text-primary">
                       مشاهده همه
                       <ChevronLeft className="w-4 h-4 mr-1" />
@@ -189,10 +189,10 @@ export default async function Dashboard() {
               <div className="glass-surface rounded-2xl p-6">
                 <h2 className="text-lg font-semibold mb-4">دسترسی سریع</h2>
                 <div className="space-y-2">
-                  <Link href="/dashboard/purchases">
+                  <Link href="/dashboard/orders">
                     <Button variant="ghost" className="w-full justify-start gap-3">
                       <Package className="w-4 h-4" />
-                      خریدهای من
+                      سفارشات من
                     </Button>
                   </Link>
                   <Link href="/dashboard/downloads">

@@ -1,9 +1,19 @@
+'use client';
+
 import Link from 'next/link';
+import Image from 'next/image';
 import { Twitter, Linkedin, Github, Instagram, Send, Mail, Phone, MapPin } from 'lucide-react';
 import { Button } from './ui/button';
+import { useState, useEffect } from 'react';
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const currentYear = 2025;
 
   const categories = [
     { name: 'وب اپلیکیشن', href: '/products?category=web-applications' },
@@ -27,6 +37,16 @@ export default function Footer() {
     { name: 'قوانین و مقررات', href: '/terms' },
     { name: 'حریم خصوصی', href: '/privacy' },
   ];
+
+  if (!mounted) {
+    return (
+      <footer className="bg-card border-t border-border">
+        <div className="container mx-auto px-4 py-12">
+          <div className="h-64" />
+        </div>
+      </footer>
+    );
+  }
 
   return (
     <footer className="bg-card border-t border-border">
@@ -61,10 +81,20 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-4 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <span className="text-white font-bold text-xl">س</span>
-              </div>
-              <span className="text-xl font-bold gradient-text">سورنا</span>
+              <Image 
+                src="/images/logo-icon.webp" 
+                alt="سورنا" 
+                width={40} 
+                height={40} 
+                className="w-10 h-10 dark:invert"
+              />
+              <Image 
+                src="/images/logo-type-farsi.webp" 
+                alt="سورنا" 
+                width={80} 
+                height={24} 
+                className="h-6 w-auto dark:invert"
+              />
             </Link>
             <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
               پلتفرم فروش پروژه‌های آماده برنامه‌نویسی با کیفیت بالا و پشتیبانی کامل

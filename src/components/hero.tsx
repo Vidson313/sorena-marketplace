@@ -4,8 +4,41 @@ import Link from "next/link";
 import { ArrowLeft, Code2, Sparkles, Zap, Shield, Star, Download, Users } from 'lucide-react';
 import { Button } from "./ui/button";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 export default function Hero() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="relative overflow-hidden bg-background">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
+        <div className="relative container mx-auto px-4 py-16 lg:py-24">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="text-right">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium text-primary">پلتفرم فروش پروژه‌های آماده</span>
+              </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-display font-bold mb-6 leading-tight">
+                <span className="gradient-text">پروژه آماده،</span>
+                <br />
+                <span className="text-foreground">دیپلوی آماده</span>
+              </h1>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2 glass-surface rounded-3xl p-6 h-64" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative overflow-hidden bg-background">
       {/* Background Effects */}

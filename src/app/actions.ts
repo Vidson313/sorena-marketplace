@@ -3,7 +3,68 @@
 import { encodedRedirect } from "@/utils/utils";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { createClient } from "../../supabase/server";
+import { createClient } from "@/../../supabase/server";
+import { revalidatePath } from "next/cache";
+
+// ========== VALIDATION HELPERS ==========
+function validateRequired(value: unknown, fieldName: string): string | null {
+  if (!value || (typeof value === "string" && value.trim() === "")) {
+    return `${fieldName} الزامی است`;
+  }
+  return null;
+}
+
+function validateSlug(slug: string): string | null {
+  if (!/^[a-z0-9-]+$/.test(slug)) {
+    return "اسلاگ فقط می‌تواند شامل حروف کوچک انگلیسی، اعداد و خط تیره باشد";
+  }
+  if (slug.length < 3 || slug.length > 100) {
+    return "اسلاگ باید بین ۳ تا ۱۰۰ کاراکتر باشد";
+  }
+  return null;
+}
+
+function validatePrice(price: number): string | null {
+  if (isNaN(price) || price < 0) {
+    return "قیمت باید یک عدد مثبت باشد";
+  }
+  if (price > 100000000) {
+    return "قیمت نمی‌تواند بیشتر از ۱۰۰ میلیون تومان باشد";
+  }
+  return null;
+}
+
+function validateTitle(title: string, fieldName: string): string | null {
+  if (title.length < 3 || title.length > 200) {
+    return `${fieldName} باید بین ۳ تا ۲۰۰ کاراکتر باشد`;
+  }
+  return null;
+}
+
+function validateDescription(desc: string, fieldName: string): string | null {
+  if (desc && desc.length > 10000) {
+    return `${fieldName} نمی‌تواند بیشتر از ۱۰۰۰۰ کاراکتر باشد`;
+  }
+  return null;
+}
+
+function validateUrl(url: string, fieldName: string): string | null {
+  if (!url) return null;
+  try {
+    new URL(url);
+    return null;
+  } catch {
+    return `${fieldName} باید یک URL معتبر باشد`;
+  }
+}
+
+function sanitizeHtml(input: string): string {
+  return input
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
@@ -162,8 +223,6 @@ export const signOutAction = async () => {
   await supabase.auth.signOut();
   return redirect("/sign-in");
 };
-
-import { revalidatePath } from "next/cache";
 
 // ========== CART ACTIONS ==========
 
@@ -601,10 +660,8 @@ export async function createOrder(discountCode?: string) {
   }
 
   if (appliedDiscountCode) {
-    await supabase
-      .from("discount_codes")
-      .update({ used_count: supabase.rpc ? 1 : 1 })
-      .eq("code", appliedDiscountCode);
+    // Increment used_count properly using raw SQL
+    await supabase.rpc('increment_discount_usage', { discount_code: appliedDiscountCode });
   }
 
   return { 
@@ -695,6 +752,72 @@ export async function createProduct(formData: FormData) {
   const includes_database = formData.get("includes_database") === "true";
   const includes_video_tutorial = formData.get("includes_video_tutorial") === "true";
   const technologies = formData.getAll("technologies") as string[];
+
+  // ========== VALIDATION ==========
+  const errors: string[] = [];
+  
+  let err = validateRequired(title, "عنوان انگلیسی");
+  if (err) errors.push(err);
+  
+  err = validateRequired(title_fa, "عنوان فارسی");
+  if (err) errors.push(err);
+  
+  err = validateRequired(slug, "اسلاگ");
+  if (err) errors.push(err);
+  
+  if (title) {
+    err = validateTitle(title, "عنوان انگلیسی");
+    if (err) errors.push(err);
+  }
+  
+  if (title_fa) {
+    err = validateTitle(title_fa, "عنوان فارسی");
+    if (err) errors.push(err);
+  }
+  
+  if (slug) {
+    err = validateSlug(slug);
+    if (err) errors.push(err);
+  }
+  
+  err = validatePrice(price);
+  if (err) errors.push(err);
+  
+  if (discount_price !== null) {
+    err = validatePrice(discount_price);
+    if (err) errors.push(err);
+    if (discount_price >= price) {
+      errors.push("قیمت تخفیف‌خورده باید کمتر از قیمت اصلی باشد");
+    }
+  }
+  
+  if (description) {
+    err = validateDescription(description, "توضیحات انگلیسی");
+    if (err) errors.push(err);
+  }
+  
+  if (description_fa) {
+    err = validateDescription(description_fa, "توضیحات فارسی");
+    if (err) errors.push(err);
+  }
+  
+  if (thumbnail_url) {
+    err = validateUrl(thumbnail_url, "آدرس تصویر");
+    if (err) errors.push(err);
+  }
+  
+  if (demo_url) {
+    err = validateUrl(demo_url, "آدرس دمو");
+    if (err) errors.push(err);
+  }
+  
+  if (difficulty_level && !["beginner", "intermediate", "advanced"].includes(difficulty_level)) {
+    errors.push("سطح دشواری نامعتبر است");
+  }
+  
+  if (errors.length > 0) {
+    return { error: errors.join("، ") };
+  }
 
   const { data: product, error } = await supabase
     .from("products")
