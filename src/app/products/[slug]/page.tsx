@@ -132,7 +132,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                 />
               </div>
               <div className="p-4 flex gap-3 overflow-x-auto">
-                {product.preview_images?.map((img, index) => (
+                {product.preview_images?.map((img: string, index: number) => (
                   <button
                     key={index}
                     className={`flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 ${
@@ -167,7 +167,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                   <div className="p-4 rounded-xl bg-muted/50">
                     <h4 className="font-medium mb-3">تکنولوژی‌ها</h4>
                     <div className="flex flex-wrap gap-2">
-                      {product.technologies?.map((tech) => (
+                      {product.technologies?.map((tech: any) => (
                         <span key={tech.id} className="badge-tech">
                           {tech.name}
                         </span>

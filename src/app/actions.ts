@@ -680,14 +680,32 @@ export async function processPayment(orderId: string, paymentReference: string) 
     return { error: "لطفاً ابتدا وارد شوید" };
   }
 
-  const paymentVerified = true;
-
-  if (!paymentVerified) {
+  // TODO: Integrate with real payment gateway (Zarinpal, IDPay, etc.)
+  // For now, this is a placeholder that should be replaced with actual payment verification
+  // Example: const paymentVerified = await verifyZarinpalPayment(paymentReference);
+  
+  if (!paymentReference || paymentReference.length < 10) {
     await supabase
       .from("orders")
       .update({ payment_status: "failed" })
       .eq("id", orderId);
-    return { error: "پرداخت تأیید نشد" };
+    return { error: "شماره پیگیری پرداخت نامعتبر است" };
+  }
+
+  // Verify the order belongs to the user and is in pending status
+  const { data: order, error: orderError } = await supabase
+    .from("orders")
+    .select("id, status, payment_status")
+    .eq("id", orderId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (orderError || !order) {
+    return { error: "سفارش یافت نشد" };
+  }
+
+  if (order.payment_status !== "pending") {
+    return { error: "این سفارش قبلاً پردازش شده است" };
   }
 
   const { error } = await supabase
@@ -902,6 +920,72 @@ export async function updateProduct(productId: string, formData: FormData) {
   const includes_database = formData.get("includes_database") === "true";
   const includes_video_tutorial = formData.get("includes_video_tutorial") === "true";
   const technologies = formData.getAll("technologies") as string[];
+
+  // ========== VALIDATION ==========
+  const errors: string[] = [];
+  
+  let err = validateRequired(title, "عنوان انگلیسی");
+  if (err) errors.push(err);
+  
+  err = validateRequired(title_fa, "عنوان فارسی");
+  if (err) errors.push(err);
+  
+  err = validateRequired(slug, "اسلاگ");
+  if (err) errors.push(err);
+  
+  if (title) {
+    err = validateTitle(title, "عنوان انگلیسی");
+    if (err) errors.push(err);
+  }
+  
+  if (title_fa) {
+    err = validateTitle(title_fa, "عنوان فارسی");
+    if (err) errors.push(err);
+  }
+  
+  if (slug) {
+    err = validateSlug(slug);
+    if (err) errors.push(err);
+  }
+  
+  err = validatePrice(price);
+  if (err) errors.push(err);
+  
+  if (discount_price !== null) {
+    err = validatePrice(discount_price);
+    if (err) errors.push(err);
+    if (discount_price >= price) {
+      errors.push("قیمت تخفیف‌خورده باید کمتر از قیمت اصلی باشد");
+    }
+  }
+  
+  if (description) {
+    err = validateDescription(description, "توضیحات انگلیسی");
+    if (err) errors.push(err);
+  }
+  
+  if (description_fa) {
+    err = validateDescription(description_fa, "توضیحات فارسی");
+    if (err) errors.push(err);
+  }
+  
+  if (thumbnail_url) {
+    err = validateUrl(thumbnail_url, "آدرس تصویر");
+    if (err) errors.push(err);
+  }
+  
+  if (demo_url) {
+    err = validateUrl(demo_url, "آدرس دمو");
+    if (err) errors.push(err);
+  }
+  
+  if (difficulty_level && !["beginner", "intermediate", "advanced"].includes(difficulty_level)) {
+    errors.push("سطح دشواری نامعتبر است");
+  }
+  
+  if (errors.length > 0) {
+    return { error: errors.join("، ") };
+  }
 
   const { error } = await supabase
     .from("products")
