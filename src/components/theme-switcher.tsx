@@ -21,11 +21,15 @@ const ThemeSwitcher = () => {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    return null;
-  }
-
   const ICON_SIZE = 16;
+
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size={"sm"}>
+        <Sun size={ICON_SIZE} className={"text-muted-foreground"} />
+      </Button>
+    );
+  }
 
   return (
     <DropdownMenu>

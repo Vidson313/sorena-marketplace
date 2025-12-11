@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '../../supabase/client'
 import {
   DropdownMenu,
@@ -44,10 +45,20 @@ export default function DashboardNavbar() {
           {/* Logo */}
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <span className="text-white font-bold text-xl">س</span>
-              </div>
-              <span className="text-xl font-bold gradient-text hidden sm:block">سورنا</span>
+              <Image 
+                src="/images/logo-icon.webp" 
+                alt="سورنا" 
+                width={40} 
+                height={40} 
+                className="w-10 h-10 dark:invert"
+              />
+              <Image 
+                src="/images/logo-type-farsi.webp" 
+                alt="سورنا" 
+                width={80} 
+                height={24} 
+                className="h-6 w-auto hidden sm:block dark:invert"
+              />
             </Link>
 
             {/* Desktop Navigation */}
