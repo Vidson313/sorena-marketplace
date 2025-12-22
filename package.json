@@ -3,7 +3,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "css:build": "tailwindcss -c tailwind.config.ts -i ./src/app/globals.css -o ./wp-theme/sorena/assets/css/sorena.css --minify"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.3",
