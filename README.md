@@ -169,3 +169,21 @@ Distributed under the MIT License. See [`LICENSE`](./LICENSE) for more informati
 <div align="center">
   <sub>Developed with clean architecture by <a href="https://github.com/Vidson313">Vidson313</a></sub>
 </div>
+
+---
+
+## ☁️ Deployment
+
+### Option 1: Vercel (Recommended — 1-Click)
+1. Push this repository to GitHub.
+2. Import project into [Vercel Dashboard](https://vercel.com/new).
+3. Set environment variables (`NEXT_PUBLIC_SUPABASE_URL`, etc.).
+4. Hit **Deploy**.
+
+### Option 2: Cloudflare Pages (Git Integration)
+1. In Cloudflare Dashboard, go to **Workers & Pages** → **Create application** → **Pages** → **Connect to Git**.
+2. Select `sorena-marketplace`.
+3. Build preset: **Next.js**.
+4. Build command: `npx @cloudflare/next-on-pages`.
+5. Output directory: `.vercel/output/static`.
+6. Add environment variable: `NODE_VERSION = 20`.
