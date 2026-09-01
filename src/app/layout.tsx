@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Vazirmatn } from "next/font/google";
 import "./globals.css";
-import Script from "next/script";
-import { TempoInit } from "@/components/tempo-init";
 import { ThemeProvider } from "@/components/theme-provider";
 
 const vazirmatn = Vazirmatn({ 
@@ -32,7 +30,6 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
-        <TempoInit />
       </body>
     </html>
   );
