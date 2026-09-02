@@ -2,12 +2,9 @@ import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Star,
-  Heart,
-  ShoppingCart,
   Download,
   FileText,
   Video,
@@ -15,10 +12,8 @@ import {
   Code2,
   Shield,
   Clock,
-  CheckCircle2,
   ExternalLink,
   Eye,
-  Share2,
   ChevronLeft,
   MessageSquare,
   ThumbsUp,
@@ -26,10 +21,10 @@ import {
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProductBySlug, getProducts, getProductReviews } from "@/lib/queries";
-import { createClient } from "../../../../supabase/server";
+import { createClient, isSupabaseConfigured } from "../../../../supabase/server";
 import ProductActions from "@/components/product-actions";
-import ReviewForm from "@/components/review-form";
-import QuestionForm from "@/components/question-form";
+
+export const dynamic = "force-dynamic";
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat("fa-IR").format(price);
@@ -45,62 +40,36 @@ const formatDate = (dateString: string) => {
 };
 
 export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
+  let user: any = null;
+  let hasPurchased = false;
+  let isFavorite = false;
+
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase.auth.getUser();
+      user = data?.user;
+    } catch {}
+  }
+
   const product = await getProductBySlug(params.slug);
-  
+
   if (!product) {
     notFound();
   }
 
   const reviews = await getProductReviews(product.id);
-  
+
   // Get related products (same category)
   const relatedResult = await getProducts({ category: product.category?.slug });
   const relatedProducts = relatedResult.products
     .filter((p: any) => p.id !== product.id)
     .slice(0, 3);
 
-  // Get Q&A
-  const { data: questions } = await supabase
-    .from("product_questions")
-    .select("*, user:users(name)")
-    .eq("product_id", product.id)
-    .eq("is_public", true)
-    .order("created_at", { ascending: false });
-
-  // Check if user has purchased this product
-  let hasPurchased = false;
-  if (user) {
-    const { data: orderItem } = await supabase
-      .from("order_items")
-      .select("id, order:orders!inner(user_id, status)")
-      .eq("product_id", product.id)
-      .eq("order.user_id", user.id)
-      .eq("order.status", "completed")
-      .single();
-    hasPurchased = !!orderItem;
-  }
-
-  // Check if product is in user's favorites
-  let isFavorite = false;
-  if (user) {
-    const { data: favorite } = await supabase
-      .from("favorites")
-      .select("user_id")
-      .eq("user_id", user.id)
-      .eq("product_id", product.id)
-      .single();
-    isFavorite = !!favorite;
-  }
-
   const hasDiscount = product.discount_price && Number(product.discount_price) < Number(product.price);
   const discountPercent = hasDiscount
     ? Math.round(((Number(product.price) - Number(product.discount_price)) / Number(product.price)) * 100)
     : 0;
-
-  const previewImages = product.preview_images || [product.thumbnail_url];
 
   return (
     <div className="min-h-screen bg-background">
@@ -108,12 +77,16 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
 
       <main className="container mx-auto px-4 py-8">
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-          <Link href="/" className="hover:text-primary">خانه</Link>
+          <Link href="/" className="hover:text-primary">
+            خانه
+          </Link>
           <ChevronLeft className="w-4 h-4" />
-          <Link href="/products" className="hover:text-primary">پروژه‌ها</Link>
+          <Link href="/products" className="hover:text-primary">
+            پروژه‌ها
+          </Link>
           <ChevronLeft className="w-4 h-4" />
           <Link href={`/products?category=${product.category?.slug}`} className="hover:text-primary">
-            {product.category?.name_fa}
+            {product.category?.name_fa || "دسته‌بندی"}
           </Link>
           <ChevronLeft className="w-4 h-4" />
           <span className="text-foreground">{product.title_fa}</span>
@@ -125,23 +98,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             {/* Gallery */}
             <div className="glass-surface rounded-2xl overflow-hidden">
               <div className="aspect-video">
-                <img
-                  src={product.thumbnail_url}
-                  alt={product.title_fa}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-4 flex gap-3 overflow-x-auto">
-                {product.preview_images?.map((img: string, index: number) => (
-                  <button
-                    key={index}
-                    className={`flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 ${
-                      index === 0 ? "border-primary" : "border-transparent"
-                    }`}
-                  >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
+                <img src={product.thumbnail_url} alt={product.title_fa} className="w-full h-full object-cover" />
               </div>
             </div>
 
@@ -199,7 +156,6 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
               </TabsContent>
 
               <TabsContent value="reviews" className="space-y-6">
-                {/* Rating Summary */}
                 <div className="flex items-center gap-6 p-4 rounded-xl bg-muted/50">
                   <div className="text-center">
                     <div className="text-4xl font-bold">{product.rating_average}</div>
@@ -208,48 +164,37 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                         <Star
                           key={i}
                           className={`w-4 h-4 ${
-                            i < Math.round(product.rating_average)
-                              ? "text-yellow-500 fill-yellow-500"
-                              : "text-muted"
+                            i < Math.round(product.rating_average) ? "text-yellow-500 fill-yellow-500" : "text-muted"
                           }`}
                         />
                       ))}
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      از {product.rating_count} نظر
-                    </div>
+                    <div className="text-sm text-muted-foreground">از {product.rating_count} نظر</div>
                   </div>
                 </div>
 
-                {/* Reviews List */}
                 <div className="space-y-4">
-                  {reviews.map((review) => (
+                  {reviews.map((review: any) => (
                     <div key={review.id} className="p-4 rounded-xl bg-muted/30">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <span className="text-primary font-semibold">
-                              {review.user.name[0]}
-                            </span>
+                            <span className="text-primary font-semibold">{review.user?.name?.[0] || "U"}</span>
                           </div>
                           <div>
-                            <p className="font-medium text-sm">{review.user.name}</p>
+                            <p className="font-medium text-sm">{review.user?.name || "کاربر"}</p>
                             <div className="flex items-center gap-2">
                               <div className="flex items-center gap-0.5">
                                 {[...Array(5)].map((_, i) => (
                                   <Star
                                     key={i}
                                     className={`w-3 h-3 ${
-                                      i < review.rating
-                                        ? "text-yellow-500 fill-yellow-500"
-                                        : "text-muted"
+                                      i < review.rating ? "text-yellow-500 fill-yellow-500" : "text-muted"
                                     }`}
                                   />
                                 ))}
                               </div>
-                              <span className="text-xs text-muted-foreground">
-                                {formatDate(review.created_at)}
-                              </span>
+                              <span className="text-xs text-muted-foreground">{formatDate(review.created_at)}</span>
                             </div>
                           </div>
                         </div>
@@ -259,7 +204,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                       <div className="flex items-center gap-4 mt-3">
                         <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary">
                           <ThumbsUp className="w-3 h-3" />
-                          مفید بود ({review.helpful_count})
+                          مفید بود ({review.helpful_count || 0})
                         </button>
                       </div>
                     </div>
@@ -270,9 +215,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
               <TabsContent value="qa">
                 <div className="text-center py-8">
                   <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-muted-foreground mb-4">
-                    سوالی دارید؟ از ما بپرسید
-                  </p>
+                  <p className="text-muted-foreground mb-4">سوالی دارید؟ از ما بپرسید</p>
                   <Button>ارسال سوال</Button>
                 </div>
               </TabsContent>
@@ -281,13 +224,11 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Price Card */}
             <div className="glass-surface rounded-2xl p-6 sticky top-24">
               <div className="flex items-center justify-between mb-4">
                 <h1 className="text-xl font-bold">{product.title_fa}</h1>
               </div>
 
-              {/* Rating & Stats */}
               <div className="flex items-center gap-4 mb-4 text-sm">
                 <div className="flex items-center gap-1">
                   <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
@@ -300,13 +241,10 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                 <span className="text-muted-foreground">{formatPrice(product.view_count)} بازدید</span>
               </div>
 
-              {/* Price */}
               <div className="mb-6">
                 {hasDiscount && (
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-muted-foreground line-through">
-                      {formatPrice(product.price)} تومان
-                    </span>
+                    <span className="text-muted-foreground line-through">{formatPrice(product.price)} تومان</span>
                     <span className="badge-discount">{discountPercent}٪ تخفیف</span>
                   </div>
                 )}
@@ -315,9 +253,8 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                 </div>
               </div>
 
-              {/* CTA Buttons */}
               <div className="space-y-3 mb-6">
-                <ProductActions 
+                <ProductActions
                   productId={product.id}
                   isFavorite={isFavorite}
                   isLoggedIn={!!user}
@@ -334,7 +271,6 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                 )}
               </div>
 
-              {/* What's Included */}
               <div className="border-t border-border pt-6">
                 <h3 className="font-semibold mb-4">شامل می‌شود:</h3>
                 <ul className="space-y-3">
@@ -385,7 +321,6 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                 </ul>
               </div>
 
-              {/* Trust Badges */}
               <div className="border-t border-border pt-6 mt-6">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Shield className="w-4 h-4 text-green-500" />
@@ -407,7 +342,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
             </Link>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {relatedProducts.map((product) => (
+            {relatedProducts.map((product: any) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

@@ -3,19 +3,12 @@ import Footer from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  CreditCard,
-  Shield,
-  Download,
-  Zap,
-  ChevronLeft,
-  Lock,
-} from "lucide-react";
+import { CreditCard, Shield, Download, Zap, ChevronLeft, Lock } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createClient } from "../../../supabase/server";
+import { createClient, isSupabaseConfigured } from "../../../supabase/server";
 
-// Mock cart data
+export const dynamic = "force-dynamic";
+
 const cartItems = [
   {
     id: "1",
@@ -46,11 +39,16 @@ const formatPrice = (price: number) => {
 };
 
 export default async function CheckoutPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  let userEmail = "demo@example.com";
 
-  if (!user) {
-    return redirect("/sign-in");
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase.auth.getUser();
+      if (data?.user?.email) {
+        userEmail = data.user.email;
+      }
+    } catch {}
   }
 
   const subtotal = cartItems.reduce((acc, item) => {
@@ -71,7 +69,6 @@ export default async function CheckoutPage() {
       <Navbar />
 
       <main className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
           <Link href="/" className="hover:text-primary">
             خانه
@@ -87,82 +84,48 @@ export default async function CheckoutPage() {
         <h1 className="text-2xl font-bold mb-8">تکمیل خرید</h1>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Checkout Form */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Billing Info */}
             <div className="glass-surface rounded-2xl p-6">
               <h2 className="text-lg font-semibold mb-4">اطلاعات صورتحساب</h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">نام</Label>
-                  <Input
-                    id="firstName"
-                    placeholder="نام خود را وارد کنید"
-                    className="h-11 rounded-xl"
-                  />
+                  <Input id="firstName" placeholder="نام خود را وارد کنید" className="h-11 rounded-xl" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">نام خانوادگی</Label>
-                  <Input
-                    id="lastName"
-                    placeholder="نام خانوادگی خود را وارد کنید"
-                    className="h-11 rounded-xl"
-                  />
+                  <Input id="lastName" placeholder="نام خانوادگی خود را وارد کنید" className="h-11 rounded-xl" />
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="email">ایمیل</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    defaultValue={user.email || ""}
-                    className="h-11 rounded-xl"
-                    dir="ltr"
-                  />
+                  <Input id="email" type="email" defaultValue={userEmail} className="h-11 rounded-xl" dir="ltr" />
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="phone">شماره موبایل</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="۰۹۱۲۳۴۵۶۷۸۹"
-                    className="h-11 rounded-xl"
-                    dir="ltr"
-                  />
+                  <Input id="phone" type="tel" placeholder="۰۹۱۲۳۴۵۶۷۸۹" className="h-11 rounded-xl" dir="ltr" />
                 </div>
               </div>
             </div>
 
-            {/* Payment Method */}
             <div className="glass-surface rounded-2xl p-6">
               <h2 className="text-lg font-semibold mb-4">روش پرداخت</h2>
               <div className="space-y-3">
                 <label className="flex items-center gap-3 p-4 rounded-xl border border-primary bg-primary/5 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="payment"
-                    defaultChecked
-                    className="w-4 h-4 text-primary"
-                  />
+                  <input type="radio" name="payment" defaultChecked className="w-4 h-4 text-primary" />
                   <CreditCard className="w-5 h-5 text-primary" />
                   <div className="flex-1">
                     <p className="font-medium text-sm">درگاه پرداخت آنلاین</p>
-                    <p className="text-xs text-muted-foreground">
-                      پرداخت امن با کارت‌های شتاب
-                    </p>
+                    <p className="text-xs text-muted-foreground">پرداخت امن با کارت‌های شتاب</p>
                   </div>
                 </label>
               </div>
             </div>
 
-            {/* Order Items */}
             <div className="glass-surface rounded-2xl p-6">
               <h2 className="text-lg font-semibold mb-4">محصولات سفارش</h2>
               <div className="space-y-4">
                 {cartItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-4 p-3 rounded-xl bg-muted/30"
-                  >
+                  <div key={item.id} className="flex items-center gap-4 p-3 rounded-xl bg-muted/30">
                     <div className="w-16 h-12 rounded-lg overflow-hidden flex-shrink-0">
                       <img
                         src={item.product.thumbnail_url}
@@ -171,9 +134,7 @@ export default async function CheckoutPage() {
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-sm truncate">
-                        {item.product.title_fa}
-                      </h3>
+                      <h3 className="font-medium text-sm truncate">{item.product.title_fa}</h3>
                     </div>
                     <div className="text-left">
                       <p className="font-semibold text-sm text-primary">
@@ -186,7 +147,6 @@ export default async function CheckoutPage() {
             </div>
           </div>
 
-          {/* Order Summary */}
           <div className="space-y-6">
             <div className="glass-surface rounded-2xl p-6 sticky top-24">
               <h3 className="font-semibold mb-4">خلاصه سفارش</h3>
@@ -217,7 +177,6 @@ export default async function CheckoutPage() {
               </p>
             </div>
 
-            {/* Trust Badges */}
             <div className="glass-surface rounded-2xl p-6">
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">

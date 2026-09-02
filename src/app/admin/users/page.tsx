@@ -1,43 +1,38 @@
 import { redirect } from "next/navigation";
-import { createClient } from "../../../../supabase/server";
+import { createClient, isSupabaseConfigured } from "../../../../supabase/server";
 import { isUserAdmin } from "@/lib/queries";
 import AdminUsersClient from "@/components/admin/admin-users";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminUsersPage() {
-  const supabase = await createClient();
+  let currentUser: any = { id: "admin-demo", email: "admin@sorena.dev" };
+  let users: any[] = [];
+  let totalOrders = 0;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase.auth.getUser();
+      if (!data?.user) return redirect("/sign-in");
+      currentUser = data.user;
+      const isAdmin = await isUserAdmin(currentUser.id);
+      if (!isAdmin) return redirect("/dashboard");
 
-  if (!user) {
-    return redirect("/sign-in");
+      const [{ data: dbUsers }, { count }] = await Promise.all([
+        supabase.from("users").select(`*, user_role:user_roles(role)`).order("created_at", { ascending: false }),
+        supabase.from("orders").select("id", { count: "exact", head: true }),
+      ]);
+      users = dbUsers || [];
+      totalOrders = count || 0;
+    } catch {}
   }
-
-  const isAdmin = await isUserAdmin(user.id);
-  if (!isAdmin) {
-    return redirect("/dashboard");
-  }
-
-  // Get all users with their roles
-  const { data: users } = await supabase
-    .from("users")
-    .select(`
-      *,
-      user_role:user_roles(role)
-    `)
-    .order("created_at", { ascending: false });
-
-  // Get user stats
-  const { count: totalOrders } = await supabase
-    .from("orders")
-    .select("id", { count: "exact", head: true });
 
   return (
-    <AdminUsersClient 
-      currentUser={user} 
-      users={users || []}
-      totalOrders={totalOrders || 0}
+    <AdminUsersClient
+      currentUser={currentUser}
+      users={users}
+      totalOrders={totalOrders}
     />
   );
 }

@@ -1,31 +1,28 @@
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import { Button } from "@/components/ui/button";
-import {
-  ShoppingCart,
-  Trash2,
-  Tag,
-  Shield,
-  Download,
-  Zap,
-  ArrowLeft,
-  ChevronLeft,
-} from "lucide-react";
+import { ShoppingCart, ArrowLeft, ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createClient } from "../../../supabase/server";
+import { createClient, isSupabaseConfigured } from "../../../supabase/server";
 import { getCartItems } from "@/lib/queries";
 import CartClient from "@/components/cart-client";
 
+export const dynamic = "force-dynamic";
+
 export default async function CartPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  let cartItems: any[] = [];
+  let user: any = null;
 
-  if (!user) {
-    return redirect("/sign-in");
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase.auth.getUser();
+      user = data?.user;
+      if (user) {
+        cartItems = await getCartItems(user.id);
+      }
+    } catch {}
   }
-
-  const cartItems = await getCartItems(user.id);
 
   const subtotal = cartItems.reduce((acc: number, item: any) => {
     return acc + Number(item.product.discount_price || item.product.price);
@@ -53,20 +50,14 @@ export default async function CartPage() {
         <h1 className="text-2xl font-bold mb-8">سبد خرید</h1>
 
         {cartItems.length > 0 ? (
-          <CartClient 
-            initialCartItems={cartItems}
-            subtotal={subtotal}
-            discount={discount}
-          />
+          <CartClient initialCartItems={cartItems} subtotal={subtotal} discount={discount} />
         ) : (
           <div className="text-center py-16">
             <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-muted/50 flex items-center justify-center">
               <ShoppingCart className="w-12 h-12 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold mb-2">سبد خرید شما خالی است</h2>
-            <p className="text-muted-foreground mb-6">
-              پروژه‌های مورد نظر خود را به سبد خرید اضافه کنید
-            </p>
+            <p className="text-muted-foreground mb-6">پروژه‌های مورد نظر خود را به سبد خرید اضافه کنید</p>
             <Link href="/products">
               <Button className="rounded-full px-8 bg-primary hover:bg-primary/90 text-white gap-2">
                 مشاهده پروژه‌ها

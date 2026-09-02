@@ -1,15 +1,15 @@
 import Footer from "@/components/footer";
 import Hero from "@/components/hero";
 import Navbar from "@/components/navbar";
-import { ProductCard, ProductCardSkeleton } from "@/components/product-card";
+import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
-import { 
-  ArrowLeft, 
-  Code2, 
-  Shield, 
-  Zap, 
-  Users, 
-  Star, 
+import {
+  ArrowLeft,
+  Code2,
+  Shield,
+  Zap,
+  Users,
+  Star,
   Download,
   CheckCircle2,
   Sparkles,
@@ -17,129 +17,10 @@ import {
   Award
 } from 'lucide-react';
 import Link from "next/link";
-import { createClient } from "../../supabase/server";
 import { getFeaturedProducts, getCategories } from "@/lib/queries";
+import { MOCK_PRODUCTS } from "@/lib/mock-data";
 
-// Fallback mock products for when database is empty
-const fallbackProducts = [
-  {
-    id: "1",
-    title: "E-commerce Dashboard",
-    title_fa: "داشبورد فروشگاه آنلاین",
-    slug: "ecommerce-dashboard",
-    short_description_fa: "داشبورد مدیریت فروشگاه با React و Next.js",
-    price: 2500000,
-    discount_price: 1750000,
-    difficulty_level: "intermediate" as const,
-    thumbnail_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
-    rating_average: 4.9,
-    rating_count: 128,
-    sales_count: 450,
-    is_featured: true,
-    is_active: true,
-    version: "2.0.0",
-    view_count: 0,
-    support_duration_months: 6,
-    includes_source_code: true,
-    includes_documentation: true,
-    includes_database: true,
-    includes_video_tutorial: true,
-    created_at: "",
-    updated_at: "",
-    technologies: [
-      { id: "1", name: "React", slug: "react", created_at: "" },
-      { id: "2", name: "Next.js", slug: "nextjs", created_at: "" },
-      { id: "3", name: "Tailwind", slug: "tailwind", created_at: "" },
-    ],
-  },
-  {
-    id: "2",
-    title: "Blog Platform",
-    title_fa: "پلتفرم بلاگ حرفه‌ای",
-    slug: "blog-platform",
-    short_description_fa: "سیستم مدیریت محتوا با Laravel و Vue.js",
-    price: 1800000,
-    discount_price: undefined,
-    difficulty_level: "beginner" as const,
-    thumbnail_url: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80",
-    rating_average: 4.7,
-    rating_count: 89,
-    sales_count: 320,
-    is_featured: true,
-    is_active: true,
-    version: "1.5.0",
-    view_count: 0,
-    support_duration_months: 6,
-    includes_source_code: true,
-    includes_documentation: true,
-    includes_database: true,
-    includes_video_tutorial: false,
-    created_at: "",
-    updated_at: "",
-    technologies: [
-      { id: "4", name: "Laravel", slug: "laravel", created_at: "" },
-      { id: "5", name: "Vue.js", slug: "vuejs", created_at: "" },
-    ],
-  },
-  {
-    id: "3",
-    title: "Mobile App Template",
-    title_fa: "قالب اپلیکیشن موبایل",
-    slug: "mobile-app-template",
-    short_description_fa: "اپلیکیشن موبایل با React Native",
-    price: 3200000,
-    discount_price: 2400000,
-    difficulty_level: "advanced" as const,
-    thumbnail_url: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&q=80",
-    rating_average: 4.8,
-    rating_count: 156,
-    sales_count: 280,
-    is_featured: true,
-    is_active: true,
-    version: "3.0.0",
-    view_count: 0,
-    support_duration_months: 6,
-    includes_source_code: true,
-    includes_documentation: true,
-    includes_database: false,
-    includes_video_tutorial: true,
-    created_at: "",
-    updated_at: "",
-    technologies: [
-      { id: "6", name: "React Native", slug: "react-native", created_at: "" },
-      { id: "7", name: "TypeScript", slug: "typescript", created_at: "" },
-    ],
-  },
-  {
-    id: "4",
-    title: "Admin Panel",
-    title_fa: "پنل مدیریت پیشرفته",
-    slug: "admin-panel",
-    short_description_fa: "پنل ادمین با امکانات کامل",
-    price: 2100000,
-    discount_price: undefined,
-    difficulty_level: "intermediate" as const,
-    thumbnail_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
-    rating_average: 4.6,
-    rating_count: 72,
-    sales_count: 195,
-    is_featured: false,
-    is_active: true,
-    version: "1.8.0",
-    view_count: 0,
-    support_duration_months: 6,
-    includes_source_code: true,
-    includes_documentation: true,
-    includes_database: true,
-    includes_video_tutorial: false,
-    created_at: "",
-    updated_at: "",
-    technologies: [
-      { id: "1", name: "React", slug: "react", created_at: "" },
-      { id: "8", name: "Node.js", slug: "nodejs", created_at: "" },
-    ],
-  },
-];
+export const dynamic = "force-dynamic";
 
 const defaultCategories = [
   { name: "وب اپلیکیشن", icon: Code2, count: 45, href: "/products?category=web-applications" },
@@ -149,20 +30,15 @@ const defaultCategories = [
 ];
 
 export default async function Home() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  // Fetch real products from database
   const featuredProducts = await getFeaturedProducts(4);
-  const products = featuredProducts.length > 0 ? featuredProducts : fallbackProducts;
-  
-  // Fetch categories from database
+  const products = featuredProducts.length > 0 ? featuredProducts : MOCK_PRODUCTS.slice(0, 4);
+
   const dbCategories = await getCategories();
-  const categories = dbCategories.length > 0 
+  const categories = dbCategories.length > 0
     ? dbCategories.map((cat, index) => ({
         name: cat.name_fa,
         icon: [Code2, Zap, Award, TrendingUp][index % 4],
-        count: 0, // Will be updated with actual count
+        count: 10 + index * 8,
         href: `/products?category=${cat.slug}`
       }))
     : defaultCategories;
@@ -171,7 +47,7 @@ export default async function Home() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <Hero />
-      
+
       {/* Categories Section */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
@@ -179,9 +55,9 @@ export default async function Home() {
             <h2 className="text-2xl md:text-3xl font-bold mb-3">دسته‌بندی پروژه‌ها</h2>
             <p className="text-muted-foreground">پروژه مورد نظر خود را در دسته‌بندی‌های مختلف پیدا کنید</p>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {categories.map((category, index) => (
+            {categories.map((category) => (
               <Link key={category.href} href={category.href}>
                 <div className="glass-surface rounded-2xl p-6 card-hover text-center group">
                   <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
@@ -204,14 +80,14 @@ export default async function Home() {
               <h2 className="text-2xl md:text-3xl font-bold mb-2">پروژه‌های ویژه</h2>
               <p className="text-muted-foreground">محبوب‌ترین و پرفروش‌ترین پروژه‌ها</p>
             </div>
-            <Link href="/products?featured=true">
+            <Link href="/products">
               <Button variant="outline" className="rounded-full gap-2">
                 مشاهده همه
                 <ArrowLeft className="w-4 h-4" />
               </Button>
             </Link>
           </div>
-          
+
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
@@ -251,38 +127,38 @@ export default async function Home() {
               ما بهترین تجربه خرید پروژه‌های آماده را برای شما فراهم می‌کنیم
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { 
-                icon: Shield, 
-                title: "پرداخت امن", 
-                description: "پرداخت از طریق درگاه‌های معتبر بانکی با رمزنگاری کامل" 
+              {
+                icon: Shield,
+                title: "پرداخت امن",
+                description: "پرداخت از طریق درگاه‌های معتبر بانکی با رمزنگاری کامل"
               },
-              { 
-                icon: Download, 
-                title: "دانلود فوری", 
-                description: "بلافاصله پس از پرداخت، فایل‌ها برای دانلود آماده می‌شوند" 
+              {
+                icon: Download,
+                title: "دانلود فوری",
+                description: "بلافاصله پس از پرداخت، فایل‌ها برای دانلود آماده می‌شوند"
               },
-              { 
-                icon: Zap, 
-                title: "پشتیبانی ۶ ماهه", 
-                description: "پشتیبانی رایگان برای رفع مشکلات و سوالات فنی" 
+              {
+                icon: Zap,
+                title: "پشتیبانی ۶ ماهه",
+                description: "پشتیبانی رایگان برای رفع مشکلات و سوالات فنی"
               },
-              { 
-                icon: Code2, 
-                title: "سورس‌کد کامل", 
-                description: "دسترسی کامل به سورس‌کد بدون هیچ محدودیتی" 
+              {
+                icon: Code2,
+                title: "سورس‌کد کامل",
+                description: "دسترسی کامل به سورس‌کد بدون هیچ محدودیتی"
               },
-              { 
-                icon: CheckCircle2, 
-                title: "مستندات جامع", 
-                description: "راهنمای نصب و استفاده به همراه هر پروژه" 
+              {
+                icon: CheckCircle2,
+                title: "مستندات جامع",
+                description: "راهنمای نصب و استفاده به همراه هر پروژه"
               },
-              { 
-                icon: Sparkles, 
-                title: "آپدیت رایگان", 
-                description: "دریافت آپدیت‌های جدید به صورت رایگان" 
+              {
+                icon: Sparkles,
+                title: "آپدیت رایگان",
+                description: "دریافت آپدیت‌های جدید به صورت رایگان"
               },
             ].map((feature, index) => (
               <div key={index} className="glass-surface rounded-2xl p-6 card-hover">
@@ -304,7 +180,7 @@ export default async function Home() {
             <h2 className="text-2xl md:text-3xl font-bold mb-3">نظرات مشتریان</h2>
             <p className="text-muted-foreground">آنچه مشتریان ما درباره سورنا می‌گویند</p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {

@@ -4,20 +4,27 @@ import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { Heart, ArrowLeft, ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createClient } from "../../../supabase/server";
+import { createClient, isSupabaseConfigured } from "../../../supabase/server";
 import { getFavorites } from "@/lib/queries";
+import { MOCK_PRODUCTS } from "@/lib/mock-data";
+
+export const dynamic = "force-dynamic";
 
 export default async function FavoritesPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  let favoriteProducts: any[] = MOCK_PRODUCTS.slice(0, 2);
 
-  if (!user) {
-    return redirect("/sign-in");
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) {
+        const favorites = await getFavorites(data.user.id);
+        if (favorites.length > 0) {
+          favoriteProducts = favorites.map((fav: any) => fav.product);
+        }
+      }
+    } catch {}
   }
-
-  const favorites = await getFavorites(user.id);
-  const favoriteProducts = favorites.map((fav: any) => fav.product);
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,9 +42,7 @@ export default async function FavoritesPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold mb-1">علاقه‌مندی‌های من</h1>
-            <p className="text-muted-foreground">
-              {favoriteProducts.length} پروژه در لیست علاقه‌مندی‌ها
-            </p>
+            <p className="text-muted-foreground">{favoriteProducts.length} پروژه در لیست علاقه‌مندی‌ها</p>
           </div>
         </div>
 
@@ -53,9 +58,7 @@ export default async function FavoritesPage() {
               <Heart className="w-12 h-12 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold mb-2">لیست علاقه‌مندی‌ها خالی است</h2>
-            <p className="text-muted-foreground mb-6">
-              پروژه‌های مورد علاقه خود را به این لیست اضافه کنید
-            </p>
+            <p className="text-muted-foreground mb-6">پروژه‌های مورد علاقه خود را به این لیست اضافه کنید</p>
             <Link href="/products">
               <Button className="rounded-full px-8 bg-primary hover:bg-primary/90 text-white gap-2">
                 مشاهده پروژه‌ها

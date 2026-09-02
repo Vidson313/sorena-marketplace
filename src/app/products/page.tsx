@@ -2,10 +2,10 @@ import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
-import { 
-  Search, 
-  SlidersHorizontal, 
-  Grid3X3, 
+import {
+  Search,
+  SlidersHorizontal,
+  Grid3X3,
   List,
   ChevronDown,
   X,
@@ -15,6 +15,8 @@ import {
 import Link from "next/link";
 import { getProducts, getCategories, getTechnologies } from "@/lib/queries";
 import ProductFilters from "@/components/product-filters";
+
+export const dynamic = "force-dynamic";
 
 interface ProductsPageProps {
   searchParams: {
