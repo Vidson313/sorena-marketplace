@@ -4,20 +4,19 @@
 
 **Full-Featured Digital Marketplace Platform Built with Next.js 14, Supabase & Stripe**
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel_Production-000000?style=for-the-badge&logo=vercel)](https://sorena-tempo1-two.vercel.app)
 [![Next.js](https://img.shields.io/badge/Next.js-14.2-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-Database%20%26%20Auth-emerald?style=for-the-badge&logo=supabase)](https://supabase.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 [![Stripe](https://img.shields.io/badge/Stripe-Payments-635BFF?style=for-the-badge&logo=stripe)](https://stripe.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 <p align="center">
+  <a href="https://sorena-tempo1-two.vercel.app"><b>🌐 Live Demo</b></a> •
   <a href="#key-features">Key Features</a> •
   <a href="#tech-stack">Tech Stack</a> •
   <a href="#database-architecture">Database</a> •
-  <a href="#quick-start">Quick Start</a> •
-  <a href="#project-structure">Structure</a> •
-  <a href="#license">License</a>
+  <a href="#quick-start">Quick Start</a>
 </p>
 
 </div>
