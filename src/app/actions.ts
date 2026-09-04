@@ -3,7 +3,7 @@
 import { encodedRedirect } from "@/utils/utils";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { createClient } from "@/../../supabase/server";
+import { createClient, isSupabaseConfigured } from "@/../../supabase/server";
 import { revalidatePath } from "next/cache";
 
 // ========== VALIDATION HELPERS ==========
@@ -70,6 +70,13 @@ export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
   const password = formData.get("password")?.toString();
   const fullName = formData.get("full_name")?.toString() || '';
+  if (!isSupabaseConfigured()) {
+    return encodedRedirect(
+      "error",
+      "/sign-up",
+      "ثبت‌نام در حالت دمو آفلاین غیرفعال است — لطفاً Supabase را متصل کنید.",
+    );
+  }
   const supabase = await createClient();
   const origin = headers().get("origin");
 
@@ -133,6 +140,13 @@ export const signUpAction = async (formData: FormData) => {
 export const signInAction = async (formData: FormData) => {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  if (!isSupabaseConfigured()) {
+    return encodedRedirect(
+      "error",
+      "/sign-in",
+      "ورود در حالت دمو آفلاین غیرفعال است — لطفاً Supabase را متصل کنید.",
+    );
+  }
   const supabase = await createClient();
 
   const { error } = await supabase.auth.signInWithPassword({
@@ -149,6 +163,13 @@ export const signInAction = async (formData: FormData) => {
 
 export const forgotPasswordAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
+  if (!isSupabaseConfigured()) {
+    return encodedRedirect(
+      "error",
+      "/forgot-password",
+      "بازیابی رمز عبور در حالت دمو آفلاین غیرفعال است.",
+    );
+  }
   const supabase = await createClient();
   const origin = headers().get("origin");
   const callbackUrl = formData.get("callbackUrl")?.toString();
@@ -182,6 +203,9 @@ export const forgotPasswordAction = async (formData: FormData) => {
 };
 
 export const resetPasswordAction = async (formData: FormData) => {
+  if (!isSupabaseConfigured()) {
+    encodedRedirect("error", "/dashboard/reset-password", "تغییر رمز عبور در حالت دمو آفلاین غیرفعال است.");
+  }
   const supabase = await createClient();
 
   const password = formData.get("password") as string;
