@@ -78,7 +78,7 @@ export const signUpAction = async (formData: FormData) => {
     );
   }
   const supabase = await createClient();
-  const origin = headers().get("origin");
+  const origin = (await headers()).get("origin");
 
   if (!email || !password) {
     return encodedRedirect(
@@ -171,7 +171,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
     );
   }
   const supabase = await createClient();
-  const origin = headers().get("origin");
+  const origin = (await headers()).get("origin");
   const callbackUrl = formData.get("callbackUrl")?.toString();
 
   if (!email) {

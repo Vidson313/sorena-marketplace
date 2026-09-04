@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     if (query) {
       const q = query.toLowerCase();
       filtered = filtered.filter(
-        (p) => p.title.toLowerCase().includes(q) || p.title_fa.includes(q) || p.description_fa.includes(q)
+        (p) => p.title.toLowerCase().includes(q) || (p.title_fa ?? "").includes(query) || (p.description_fa ?? "").includes(query)
       );
     }
     if (category) filtered = filtered.filter((p) => p.category?.slug === category);
